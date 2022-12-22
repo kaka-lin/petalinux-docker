@@ -23,7 +23,11 @@ RUN apt-get update && \
     zlib1g-dev \
     zlib1g:i386 \
     gcc-multilib \
-    libncurses5-dev
+    libncurses5-dev \
+    rsync \
+    cpio \
+    socat \
+    chrpath
 
 RUN apt-get -y autoremove && \
     apt-get -y autoclean && \
@@ -60,8 +64,20 @@ RUN sudo chown -R petalinux:petalinux . && \
     rm -f petalinux-v2020.2-final-installer.run && \
     rm -f petalinux_installation_log
 
-# Source PetaLinux environment
-RUN echo "source /opt/petalinux/settings.sh" >> ~/.bashrc
+# set bash as default shell
+USER root
+RUN echo "dash dash/sh boolean false" | debconf-set-selections
+RUN DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 
+USER petalinux
 WORKDIR /home/petalinux
 ENV HOME /home/petalinux
+
+# Re-Set locale for petalinux
+RUN sudo locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
+# Source PetaLinux environment
+RUN echo "source /opt/petalinux/settings.sh" >> ~/.bashrc 
